@@ -61,7 +61,9 @@ export default {
     theme: 'Theme',
     clipboardDemo: 'Clipboard',
     i18n: 'I18n',
-    externalLink: 'External Link'
+    externalLink: 'External Link',
+    blog: 'Blog',
+    raspberryPi: 'RaspberryPi'
   },
   navbar: {
     logOut: 'Log Out',

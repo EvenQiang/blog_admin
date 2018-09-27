@@ -2,8 +2,10 @@ import request from '@/utils/request'
 
 export function userSearch(name) {
   return request({
-    url: '/search/user',
+    url: '/user/searchUser',
     method: 'get',
-    params: { name }
+    params: {
+      name
+    }
   })
 }

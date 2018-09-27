@@ -35,7 +35,7 @@
 
                 <el-col :span="10">
                   <el-form-item label-width="80px" label="发布时间:" class="postInfo-container-item">
-                    <el-date-picker v-model="postForm.display_time" type="datetime" format="yyyy-MM-dd HH:mm:ss" placeholder="选择日期时间"/>
+                    <el-date-picker v-model="postForm.timestamp" type="datetime" format="yyyy-MM-dd HH:mm:ss" placeholder="选择日期时间"/>
                   </el-form-item>
                 </el-col>
 
@@ -79,11 +79,10 @@ import Upload from '@/components/Upload/singleImage3'
 import MDinput from '@/components/MDinput'
 import Sticky from '@/components/Sticky' // 粘性header组件
 import { validateURL } from '@/utils/validate'
-import { fetchArticle } from '@/api/article'
+import { fetchArticle, createArticle, updateArticle } from '@/api/blog'
 import { userSearch } from '@/api/remoteSearch'
 import Warning from './Warning'
 import { CommentDropdown, PlatformDropdown, SourceUrlDropdown } from './Dropdown'
-
 const defaultForm = {
   status: 'draft',
   title: '', // 文章题目
@@ -91,7 +90,7 @@ const defaultForm = {
   content_short: '', // 文章摘要
   source_uri: '', // 文章外链
   image_uri: '', // 文章图片
-  display_time: undefined, // 前台展示时间
+  timestamp: undefined, // 前台展示时间
   id: undefined,
   platforms: ['a-platform'],
   comment_disabled: false,
@@ -162,28 +161,42 @@ export default {
   methods: {
     fetchData(id) {
       fetchArticle(id).then(response => {
-        this.postForm = response.data
-        // Just for test
-        this.postForm.title += `   Article Id:${this.postForm.id}`
-        this.postForm.content_short += `   Article Id:${this.postForm.id}`
+        this.postForm = response.data.data[0]
       }).catch(err => {
         console.log(err)
       })
     },
     submitForm() {
-      this.postForm.display_time = parseInt(this.display_time / 1000)
-      console.log(this.postForm)
+      this.postForm.timestamp = new Date(this.postForm.timestamp).getTime()
       this.$refs.postForm.validate(valid => {
         if (valid) {
-          this.loading = true
-          this.$notify({
-            title: '成功',
-            message: '发布文章成功',
-            type: 'success',
-            duration: 2000
-          })
-          this.postForm.status = 'published'
-          this.loading = false
+          if (this.isEdit) {
+            updateArticle(this.postForm).then(() => {
+              this.loading = true
+              this.$notify({
+                title: '成功',
+                message: '修改文章成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.postForm.status = 'published'
+              this.loading = false
+            })
+          } else {
+            // this.postForm.id = parseInt(Math.random() * 100) + 1024 // mock a id
+            // this.postForm.author = 'vue-element-admin'
+            createArticle(this.postForm).then(() => {
+              this.loading = true
+              this.$notify({
+                title: '成功',
+                message: '发布文章成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.postForm.status = 'published'
+              this.loading = false
+            })
+          }
         } else {
           console.log('error submit!!')
           return false
@@ -208,8 +221,8 @@ export default {
     },
     getRemoteUserList(query) {
       userSearch(query).then(response => {
-        if (!response.data.items) return
-        this.userListOptions = response.data.items.map(v => v.name)
+        if (!response.data.data) return
+        this.userListOptions = response.data.data.map(v => v.name)
       })
     }
   }
